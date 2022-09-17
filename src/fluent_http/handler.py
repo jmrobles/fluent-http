@@ -3,10 +3,12 @@ import json
 
 import requests
 from requests.auth import HTTPBasicAuth
+from .exceptions import FluentHttpException
+
 
 class FluentHttpHandler(StreamHandler):
 
-    def __init__(self, url: str = 'localhost', port: int = 9880, tag: str = 'fluent.info', username: str = None, password: str = None):
+    def __init__(self, url: str = 'http://localhost', port: int = 9880, tag: str = 'fluent.info', username: str = None, password: str = None):
 
         StreamHandler.__init__(self)
         self.url = url
@@ -27,7 +29,12 @@ class FluentHttpHandler(StreamHandler):
         headers = {
             'Content-type': 'application/json'
         }
-        resp = requests.post(url, data, headers=headers, auth=auth)
+        try:
+            resp = requests.post(url, data, headers=headers, auth=auth)
+        except Exception as exc:
+            raise FluentHttpException(exc)
+        if resp.status_code not in (200, 204):
+            raise FluentHttpException(f'unexpected http response status: {resp.status_code}')
 
     def _build_url(self):
 

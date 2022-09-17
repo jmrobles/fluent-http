@@ -1,0 +1,3 @@
+class FluentHttpException(Exception):
+
+    pass
