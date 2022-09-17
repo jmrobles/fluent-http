@@ -32,9 +32,9 @@ class FluentHttpHandler(StreamHandler):
         try:
             resp = requests.post(url, data, headers=headers, auth=auth)
         except Exception as exc:
-            raise FluentHttpException(exc)
+            raise FluentHttpException('HTTP Exception') from exc
         if resp.status_code not in (200, 204):
-            raise FluentHttpException(f'unexpected http response status: {resp.status_code}')
+            raise FluentHttpException(f'Unexpected http response status: {resp.status_code}')
 
     def _build_url(self):
 

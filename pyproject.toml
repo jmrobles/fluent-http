@@ -1,0 +1,26 @@
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fluent-http"
+version = "0.1.0"
+description = "Fluentd logger client for HTTP input"
+readme = "README.md"
+authors = [{ name = "JM Robles", email = "roblesjm@gmail.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["fluent", "fluentd", "logging", "handler", "http"]
+dependencies = [
+    "requests >= 2.0.0",
+]
+requires-python = ">=3.6"
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false

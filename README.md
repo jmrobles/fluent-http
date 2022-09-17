@@ -48,5 +48,5 @@ fluent_http_handler = FluentHttpHandler(url='https://fluent.example.com', port=4
 
 ## License
 
-Apache 2.0
+MIT License
 

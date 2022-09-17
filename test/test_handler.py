@@ -3,8 +3,10 @@ from unittest import mock
 import logging
 from logging import LogRecord
 
+import pytest
 import requests
-from fluent_http.handler import FluentHttpHandler
+from fluent_http import FluentHttpException
+from fluent_http import FluentHttpHandler
 
 class TestFluentHttpHandler(unittest.TestCase):
 
@@ -75,6 +77,8 @@ class TestFluentHttpHandler(unittest.TestCase):
         test_log_record = LogRecord(test_name, test_level, test_pathname, test_lineno,
                                     test_msg, test_args, test_exc_info)
         test_default_url = 'http://localhost:9880/fluent.info'
+        # Mock
+        mock_post.return_value.status_code = 200
         # When
         fluent_http_handler = FluentHttpHandler()
         fluent_http_handler.emit(test_log_record)
@@ -99,6 +103,8 @@ class TestFluentHttpHandler(unittest.TestCase):
         test_username = 'username'
         test_password = 'password'
         test_auth = requests.auth.HTTPBasicAuth(test_username, test_password)
+        # Mock
+        mock_post.return_value.status_code = 200
         # When
         fluent_http_handler = FluentHttpHandler(username=test_username, password=test_password)
         fluent_http_handler.emit(test_log_record)
@@ -106,3 +112,77 @@ class TestFluentHttpHandler(unittest.TestCase):
         mock_post.assert_called_once_with(test_default_url, f'{{"message": "{test_msg}"}}',
                                           headers={'Content-type': 'application/json'}, auth=test_auth)
 
+    @mock.patch.object(requests, 'post')
+    def test_emit_http_no_url(self, mock_post):
+
+        # Given
+        test_name = 'name'
+        test_level = logging.INFO
+        test_pathname = 'path'
+        test_lineno = 1
+        test_msg = 'hello'
+        test_args = None
+        test_exc_info = None
+        test_log_record = LogRecord(test_name, test_level, test_pathname, test_lineno,
+                                    test_msg, test_args, test_exc_info)
+        test_url = 'not an url'
+        # Mock
+        mock_post.side_effect = FluentHttpException()
+        # When
+        fluent_http_handler = FluentHttpHandler(url=test_url)
+        with pytest.raises(FluentHttpException) as exc:
+            fluent_http_handler.emit(test_log_record)
+        assert str(exc.value) == 'HTTP Exception'
+        # Then
+        mock_post.assert_called_once_with(f'{test_url}:9880/fluent.info', f'{{"message": "{test_msg}"}}',
+                                          headers={'Content-type': 'application/json'}, auth=None)
+
+    @mock.patch.object(requests, 'post')
+    def test_emit_http_404(self, mock_post):
+
+        # Given
+        test_name = 'name'
+        test_level = logging.INFO
+        test_pathname = 'path'
+        test_lineno = 1
+        test_msg = 'hello'
+        test_args = None
+        test_exc_info = None
+        test_log_record = LogRecord(test_name, test_level, test_pathname, test_lineno,
+                                    test_msg, test_args, test_exc_info)
+        test_url = 'not an url'
+        # Mock
+        mock_post.return_value.status_code = 404
+        # When
+        fluent_http_handler = FluentHttpHandler(url=test_url)
+        with pytest.raises(FluentHttpException) as exc:
+            fluent_http_handler.emit(test_log_record)
+        assert str(exc.value) == 'Unexpected http response status: 404'
+        # Then
+        mock_post.assert_called_once_with(f'{test_url}:9880/fluent.info', f'{{"message": "{test_msg}"}}',
+                                          headers={'Content-type': 'application/json'}, auth=None)
+
+    @mock.patch.object(requests, 'post')
+    def test_emit_http_500(self, mock_post):
+
+        # Given
+        test_name = 'name'
+        test_level = logging.INFO
+        test_pathname = 'path'
+        test_lineno = 1
+        test_msg = 'hello'
+        test_args = None
+        test_exc_info = None
+        test_log_record = LogRecord(test_name, test_level, test_pathname, test_lineno,
+                                    test_msg, test_args, test_exc_info)
+        test_url = 'not an url'
+        # Mock
+        mock_post.return_value.status_code = 500
+        # When
+        fluent_http_handler = FluentHttpHandler(url=test_url)
+        with pytest.raises(FluentHttpException) as exc:
+            fluent_http_handler.emit(test_log_record)
+        assert str(exc.value) == 'Unexpected http response status: 500'
+        # Then
+        mock_post.assert_called_once_with(f'{test_url}:9880/fluent.info', f'{{"message": "{test_msg}"}}',
+                                          headers={'Content-type': 'application/json'}, auth=None)
